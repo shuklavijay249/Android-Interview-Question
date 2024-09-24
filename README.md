@@ -131,18 +131,15 @@ Understanding the difference between **stack** and **heap memory** in Android is
 
 In Android and Java/Kotlin development, **interfaces** and **abstract classes** are both used to define abstract behavior, but they have distinct differences in terms of functionality and use cases.
 
-### **Differences Between Interface and Abstract Class**:
-
-| Feature                    | **Interface**                           | **Abstract Class**                           |
-|----------------------------|-----------------------------------------|----------------------------------------------|
-| **Method Implementation**   | Cannot have method implementations (in Java before version 8). Java 8+ allows default methods. In Kotlin, interfaces can have default method implementations. | Can have both abstract methods and methods with implementations. |
-| **Multiple Inheritance**    | A class can implement multiple interfaces. | A class can inherit from only one abstract class. |
-| **Fields**                  | Can have constants (static final fields), but no instance variables. | Can have both constants and instance variables. |
+| Feature                    | **Interface**                                                        | **Abstract Class**                                               |
+|----------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------|
+| **Method Implementation**   | Cannot have method implementations (in Java before version 8). Java 8+ allows default methods. In Kotlin, interfaces can have default method implementations. | Can have both abstract methods and methods with implementations.  |
+| **Multiple Inheritance**    | A class can implement multiple interfaces.                          | A class can inherit from only one abstract class.               |
+| **Fields**                  | Can have constants (static final fields), but no instance variables. | Can have both constants and instance variables.                 |
 | **When to Use**             | Use when you want to define a contract that multiple classes should follow, but they may not share common functionality. | Use when you want to define common behavior that all subclasses should inherit, with the ability to share code (method implementations). |
-| **Accessibility Modifiers** | Methods in an interface are `public` by default. | Methods and fields can have any access modifier (`private`, `protected`, `public`). |
-| **Constructor**             | Cannot have constructors. | Can have constructors, allowing you to initialize common fields for subclasses. |
+| **Accessibility Modifiers** | Methods in an interface are `public` by default.                    | Methods and fields can have any access modifier (`private`, `protected`, `public`). |
+| **Constructor**             | Cannot have constructors.                                           | Can have constructors, allowing you to initialize common fields for subclasses. |
 
----
 
 ### **Interface Example in Android**:
 
