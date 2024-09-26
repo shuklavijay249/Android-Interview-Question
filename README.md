@@ -269,6 +269,96 @@ abstract class BaseActivity : AppCompatActivity() {
     abstract fun setupUI()  // Forces subclass to define specific UI behavior
 }
 ```
+## 5. Here's a comparison between `lateinit` and `lazy` in Kotlin, formatted for a GitHub `.md` file:
+
+```markdown
+# `lateinit` vs `lazy` in Kotlin
+
+## `lateinit`
+- **Definition**: `lateinit` is used to declare a **mutable** variable (`var`) that will be initialized at a later point. It is typically used for non-null properties.
+- **Key Points**:
+  - Can only be used with **`var`** (mutable variables).
+  - Can only be used for **non-primitive** types (i.e., not for `Int`, `Double`, etc.).
+  - Throws **`UninitializedPropertyAccessException`** if accessed before initialization.
+  - Cannot be used with **`val`** (immutable variables).
+
+- **Use Case**: Ideal for properties that are initialized **after** object creation, such as dependency injection, views, or resources in Android activities.
+  
+- **Example**:
+  ```kotlin
+  lateinit var name: String
+
+  fun initializeName() {
+      name = "John"
+  }
+
+  fun printName() {
+      println(name)  // Accesses the initialized name
+  }
+  ```
+
+  - **Drawback**: If `name` is accessed before being initialized, it will throw an `UninitializedPropertyAccessException`.
+
+---
+
+## `lazy`
+- **Definition**: `lazy` is used for **lazy initialization** of **immutable** variables (`val`). The initialization occurs when the variable is first accessed.
+- **Key Points**:
+  - Can only be used with **`val`** (immutable variables).
+  - Initialization happens **only once** upon first access, and the value is cached for future access.
+  - Thread-safe by default, but you can customize the behavior using `LazyThreadSafetyMode`.
+
+- **Use Case**: Useful when you want to delay initialization of a value until it is actually needed, particularly for expensive computations.
+
+- **Example**:
+  ```kotlin
+  val name: String by lazy {
+      println("Initializing name")
+      "John"
+  }
+
+  fun printName() {
+      println(name)  // "Initializing name" is printed once
+      println(name)  // "John" is printed directly (without reinitialization)
+  }
+  ```
+
+  - **Benefit**: `name` is only initialized the first time it is accessed, ensuring efficient resource usage.
+
+---
+
+## Key Differences
+
+| Feature              | `lateinit`                        | `lazy`                                   |
+|----------------------|-----------------------------------|------------------------------------------|
+| **Variable Type**     | `var` (mutable)                   | `val` (immutable)                        |
+| **Initialization**    | Must be initialized before use    | Initialized upon first access            |
+| **Primarily Used For**| Non-null properties that are initialized later (e.g., in Android activities) | Expensive computations or delayed initialization |
+| **Exception**         | Throws `UninitializedPropertyAccessException` if accessed before initialization | No exception (simply initializes when first accessed) |
+| **Thread Safety**     | Not thread-safe                   | Thread-safe by default (can be customized) |
+
+---
+
+### Example Usage in Android:
+- **`lateinit`**: Typically used for view binding or dependency injection.
+  ```kotlin
+  lateinit var textView: TextView
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+      super.onCreate(savedInstanceState)
+      textView = findViewById(R.id.text_view)
+  }
+  ```
+
+- **`lazy`**: Used for expensive initializations that should only happen when needed.
+  ```kotlin
+  val database: Database by lazy {
+      Database.getInstance(context)
+  }
+  ```
+
+In summary, use `lateinit` when you need a non-null mutable property that can be initialized later, and `lazy` when you want to initialize an immutable property only when it's first accessed.
+```
 
 ---
 
@@ -525,4 +615,178 @@ user.notifyUser("Hello!")
 - Use **abstract classes** to provide a base implementation and shared functionality. Abstract classes are better when you need to provide partial implementations or some shared code for subclasses.
 - The four principles of **OOP**—**encapsulation**, **abstraction**, **inheritance**, and **polymorphism**—are essential for creating modular, reusable, and maintainable code.
 - Following **SOLID principles** ensures that your software design is flexible, maintainable, and scalable.
+```
+Here's the formatted version of the Kotlin interview questions and answers for a GitHub `.md` file:
+
+```markdown
+# Kotlin Interview Questions for Android Developers
+
+### 1. What are the key differences between `var` and `val` in Kotlin?
+- **`var`**: Defines a mutable variable, meaning its value can be reassigned.
+  ```kotlin
+  var name = "John"
+  name = "Doe"  // This is allowed.
+  ```
+- **`val`**: Defines an immutable variable, meaning its value can only be assigned once (similar to `final` in Java).
+  ```kotlin
+  val name = "John"
+  name = "Doe"  // This is NOT allowed.
+  ```
+
+---
+
+### 2. What are Kotlin data classes, and why are they useful?
+- A **data class** in Kotlin is used to hold data. The compiler automatically provides `equals()`, `hashCode()`, `toString()`, and `copy()` for data classes.
+- **Example**:
+  ```kotlin
+  data class User(val name: String, val age: Int)
+
+  val user1 = User("John", 30)
+  val user2 = user1.copy(age = 31)  // Create a new User with modified age.
+  ```
+
+---
+
+### 3. What are higher-order functions in Kotlin?
+- A **higher-order function** is a function that takes another function as a parameter or returns a function.
+- **Example**:
+  ```kotlin
+  fun higherOrderFunction(operation: (Int, Int) -> Int, a: Int, b: Int): Int {
+      return operation(a, b)
+  }
+
+  val sum = higherOrderFunction({ x, y -> x + y }, 10, 20)
+  println(sum)  // Output: 30
+  ```
+
+---
+
+### 4. Explain coroutines in Kotlin and their benefits in Android development.
+- **Coroutines** are a Kotlin feature for asynchronous programming. They are lightweight threads that allow for non-blocking code execution.
+- **Example**:
+  ```kotlin
+  GlobalScope.launch {
+      val data = async { fetchDataFromNetwork() }
+      println(data.await())  // Wait for the result
+  }
+  ```
+- **Benefits**:
+  - Lightweight threads.
+  - Structured concurrency.
+  - Main-safety: Long-running tasks do not block the main thread.
+
+---
+
+### 5. What is `sealed class` in Kotlin, and when would you use it?
+- A **sealed class** restricts the inheritance hierarchy. All subclasses must be defined in the same file.
+- **Example**:
+  ```kotlin
+  sealed class Result {
+      data class Success(val data: String): Result()
+      data class Error(val exception: Exception): Result()
+  }
+
+  fun handleResult(result: Result) {
+      when (result) {
+          is Result.Success -> println(result.data)
+          is Result.Error -> println(result.exception.message)
+      }
+  }
+  ```
+
+---
+
+### 6. What is the difference between `==` and `===` in Kotlin?
+- **`==`** (structural equality): Compares the **values** of two objects.
+  ```kotlin
+  val a = "hello"
+  val b = "hello"
+  println(a == b)  // Output: true
+  ```
+- **`===`** (referential equality): Compares the **references** of two objects.
+  ```kotlin
+  val a = "hello"
+  val b = "hello"
+  println(a === b)  // Output: false (for two different instances of String)
+  ```
+
+---
+
+### 7. How does `lateinit` work in Kotlin?
+- **`lateinit`** allows you to declare a variable that will be initialized later. It’s used only with `var` and not with `val` or primitive types.
+- **Example**:
+  ```kotlin
+  lateinit var user: String
+
+  fun initializeUser() {
+      user = "John"
+  }
+  ```
+
+- **Limitation**: Accessing a `lateinit` variable before initialization throws an `UninitializedPropertyAccessException`.
+
+---
+
+### 8. What is `by lazy` in Kotlin?
+- **`by lazy`** is used for **lazy initialization**, meaning a property is initialized only when it's accessed for the first time.
+- **Example**:
+  ```kotlin
+  val data: String by lazy {
+      fetchDataFromNetwork()  // expensive operation
+  }
+  ```
+
+---
+
+### 9. Explain the concept of extension functions in Kotlin.
+- **Extension functions** add new functionality to existing classes without modifying their source code.
+- **Example**:
+  ```kotlin
+  fun String.capitalizeFirstLetter(): String {
+      return this.replaceFirstChar { it.uppercase() }
+  }
+
+  val name = "kotlin"
+  println(name.capitalizeFirstLetter())  // Output: Kotlin
+  ```
+
+---
+
+### 10. What is the difference between `apply()`, `let()`, `run()`, and `also()` in Kotlin?
+- **Scope functions** allow you to run blocks of code while accessing an object in a concise way.
+
+- **`apply()`**: Executes a block and returns the object.
+  ```kotlin
+  val person = Person().apply {
+      name = "John"
+      age = 30
+  }
+  ```
+
+- **`let()`**: Executes a block and returns the result of the lambda.
+  ```kotlin
+  val name = "Kotlin"
+  name?.let {
+      println(it)  // Executed if name is non-null
+  }
+  ```
+
+- **`run()`**: Executes a block and returns the result, similar to `let()`.
+  ```kotlin
+  val person = Person()
+  val description = person.run {
+      "$name is $age years old"
+  }
+  ```
+
+- **`also()`**: Similar to `apply()`, but mainly used for side effects.
+  ```kotlin
+  val person = Person().also {
+      println("Initializing: ${it.name}")
+  }
+  ```
+
+---
+
+These Kotlin questions will help you prepare for Android developer interviews focusing on Kotlin and its use in Android applications.
 ```
