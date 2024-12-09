@@ -786,6 +786,58 @@ Here's the formatted version of the Kotlin interview questions and answers for a
   }
   ```
 
+- **`What are the different types of launch modes available in Android?`**
+Answer: Android provides four launch modes for activities:
+* standard: Every time an activity is launched, a new instance is created.
+* singleTop: If an instance of the activity already exists at the top of the stack, no new instance will be created; the existing one will be reused.
+* singleTask: A new task is created with the activity at the root, and if an instance exists in any task, it is reused, and all other activities above it are cleared.
+* singleInstance: The activity is launched in a new task, and it is the only activity in that task. Other activities can't be added to this task.
+  ```
+- **`In Kotlin, the concepts of inline functions and external functions serve different purposes:`**
+
+In Kotlin, an **inline function** is a function in which the compiler replaces the function call with the actual function body during compilation. This helps reduce the overhead of function calls, especially for higher-order functions (functions that accept other functions as parameters). It can improve performance in cases where function calls would otherwise create additional objects like lambdas or cause additional stack frame usage.
+
+### Syntax of an Inline Function:
+
+```kotlin
+inline fun myInlineFunction(action: () -> Unit) {
+    // Function body
+    action()
+}
+```
+
+### How Inline Functions Work:
+
+Normally, when you pass a function (lambda) as an argument to another function, it creates an object (an instance of a `Function` type) and captures any variables it uses from its surrounding scope. This can lead to overhead in terms of memory and CPU usage.
+
+When a function is marked with the `inline` keyword, the compiler replaces the function call with the actual code of the function itself, including any lambda expressions passed to it. This can avoid the creation of lambda instances and reduce the overhead.
+
+### Example:
+
+#### Without `inline`:
+```kotlin
+fun doSomething(action: () -> Unit) {
+    println("Before action")
+    action()
+    println("After action")
+}
+
+fun main() {
+    doSomething {
+        println("Action is being performed")
+    }
+}
+
+### Benefits of `inline` Functions:
+1. **Improved Performance**: Eliminates the overhead of function calls and lambda instantiations.
+2. **No Memory Allocation for Lambdas**: Inlining avoids allocating memory for the lambda object.
+3. **Reduced Stack Overhead**: By inlining the function, the need for creating a new stack frame for the function call is eliminated.
+Inline functions enable the use of reified type parameters. With reified types, you can access the actual type of a generic type parameter at runtime, which is not possible with regular generic functions. 
+
+### Drawbacks of `inline` Functions:
+1. **Code Size Increase**: Inlining a function increases the size of the bytecode because the function body is copied into each call site. This can lead to **code bloat** if the function is called many times.
+2. **Not Always Suitable**: For large functions or those that are called infrequently, inlining may not bring significant performance benefits and may unnecessarily increase the code size.
+```
 ---
 
 These Kotlin questions will help you prepare for Android developer interviews focusing on Kotlin and its use in Android applications.
