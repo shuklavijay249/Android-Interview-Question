@@ -124,6 +124,82 @@ In this case, the `context` can cause a memory leak if the activity is destroyed
 
 ---
 
+## 📌 1. Use Application Context Wisely
+- Avoid holding long-lived references to `Activity` or `Context`.
+- Use `getApplicationContext()` when a context is needed outside the component lifecycle.
+
+---
+
+## 🧹 2. Avoid Memory Leaks
+- Use `WeakReference` or `static` inner classes to avoid holding strong references to `Activity` or `Fragment`.
+- Always unregister:
+  - `BroadcastReceiver`
+  - `LiveData` observers
+  - `ViewTreeObserver` listeners
+  - Any other long-living callbacks
+
+---
+
+## 🔁 3. Use Lifecycle-Aware Components
+- Use Jetpack's `ViewModel`, `LiveData`, and `LifecycleObserver`.
+- These components help manage memory by automatically cleaning up when the lifecycle ends.
+
+---
+
+## 🖼️ 4. Recycle Bitmaps and Large Resources
+- Use `BitmapFactory.Options.inSampleSize` to load scaled-down images.
+- Use `ImageDecoder` (API 28+) or manually call `bitmap.recycle()` on older APIs.
+
+---
+
+## 🧮 5. Use Efficient Data Structures
+- Use `SparseArray`, `LongSparseArray`, or `ArrayMap` instead of standard `HashMap` for memory savings.
+- Replace `HashSet` with `ArraySet` when possible.
+
+---
+
+## 🧰 6. Use ProGuard / R8
+- Enable code shrinking and resource shrinking.
+- Removes unused code, reducing APK size and memory footprint.
+
+---
+
+## ⏱️ 7. Avoid Heavy Operations on the Main Thread
+- Use background processing with:
+  - Kotlin Coroutines
+  - `AsyncTask` (legacy)
+  - `ExecutorService`
+  - `WorkManager`
+
+---
+
+## 💾 8. Use Caching Wisely
+- Use `LruCache` for in-memory caching.
+- Ensure cache size is appropriate for available memory.
+
+---
+
+## 🔍 9. Analyze and Profile Regularly
+- Use tools like:
+  - Android Profiler
+  - LeakCanary
+  - Memory Analyzer Tool (MAT)
+- Helps detect memory leaks and analyze heap dumps.
+
+---
+
+## 🚫 10. Be Careful with Static Fields
+- Avoid storing `Activity`, `Context`, or `View` in static fields.
+- Static references can prevent garbage collection and cause memory leaks.
+
+---
+
+> ✅ *Consistent memory profiling and efficient management practices help ensure smooth, crash-free, and high-performing Android apps.*
+
+
+
+---
+
 Understanding the difference between **stack** and **heap memory** in Android is essential for optimizing memory usage and avoiding crashes due to memory-related issues.
 ```
 
