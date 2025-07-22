@@ -1,0 +1,363 @@
+# 🔐 Android Security, Room DB, Retrofit, Deep Linking, Firebase, and More
+
+This document serves as a comprehensive technical reference for mid-to-senior Android developers. It includes secure coding practices, Room database patterns, network integrations, Play Store protections, and deep linking strategies.
+
+---
+
+## 🛡️ Penetration Testing
+
+Perform **manual and automated penetration testing** regularly using:
+
+- **MobSF** – Static & dynamic analysis
+- **Burp Suite**, **OWASP ZAP** – API & network traffic analysis
+- **Frida**, **Objection** – Runtime instrumentation & manipulation
+
+---
+
+## 🗃️ Android Room Database
+
+Room is a Jetpack library that abstracts SQLite for easier database access.
+
+### 🔧 Key Components
+
+- **Entity**
+```kotlin
+@Entity(tableName = "users")
+data class User(
+    @PrimaryKey(autoGenerate = true) val id: Int,
+    val name: String,
+    val age: Int
+)
+````
+
+* **DAO**
+
+```kotlin
+@Dao
+interface UserDao {
+    @Insert suspend fun insertUser(user: User)
+
+    @Query("SELECT * FROM users")
+    suspend fun getAllUsers(): List<User>
+
+    @Delete suspend fun deleteUser(user: User)
+}
+```
+
+* **Database**
+
+```kotlin
+@Database(entities = [User::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
+}
+```
+
+* **Create DB**
+
+```kotlin
+val db = Room.databaseBuilder(
+    applicationContext,
+    AppDatabase::class.java,
+    "my-database"
+).build()
+
+val userDao = db.userDao()
+```
+
+### ✅ Common Interview Questions
+
+1. **Conflict Handling**
+
+```kotlin
+@Insert(onConflict = OnConflictStrategy.REPLACE)
+```
+
+Strategies: `REPLACE`, `IGNORE`, `ABORT`, `FAIL`, `ROLLBACK`
+
+2. **Many-to-Many Relationship**
+
+```kotlin
+@Entity(primaryKeys = ["studentId", "courseId"])
+data class StudentCourseCrossRef(val studentId: Long, val courseId: Long)
+
+data class StudentWithCourses(
+    @Embedded val student: Student,
+    @Relation(
+        parentColumn = "studentId",
+        entityColumn = "courseId",
+        associateBy = Junction(StudentCourseCrossRef::class)
+    )
+    val courses: List<Course>
+)
+```
+
+3. **@Embedded vs @Relation**
+
+* `@Embedded` → Flatten fields into table
+* `@Relation` → Join tables logically
+
+4. **Joins/Nested Queries**
+
+```kotlin
+@Query("""
+    SELECT * FROM Student 
+    INNER JOIN StudentCourseCrossRef ON Student.studentId = StudentCourseCrossRef.studentId
+    INNER JOIN Course ON Course.courseId = StudentCourseCrossRef.courseId
+    WHERE Course.title = :title
+""")
+fun getStudentsByCourse(title: String): List<Student>
+```
+
+5. **Bulk Insert**
+
+```kotlin
+@Insert(onConflict = OnConflictStrategy.IGNORE)
+suspend fun insertUsers(users: List<User>)
+```
+
+6. **@Transaction**
+   Ensures atomic operation, especially for `@Relation` queries.
+
+7. **Update Records**
+
+```kotlin
+@Update(onConflict = OnConflictStrategy.ABORT)
+fun updateUser(user: User)
+```
+
+8. **Delete Records**
+
+```kotlin
+@Delete fun deleteUser(user: User)
+
+@Query("DELETE FROM StudentCourseCrossRef WHERE studentId = :id")
+fun deleteStudentCourses(id: Long)
+```
+
+9. **Migration**
+
+```kotlin
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE User ADD COLUMN age INTEGER DEFAULT 0")
+    }
+}
+```
+
+10. **Encryption with SQLCipher**
+
+```kotlin
+val passphrase = SQLiteDatabase.getBytes("your_passphrase".toCharArray())
+val factory = SupportFactory(passphrase)
+
+Room.databaseBuilder(context, AppDatabase::class.java, "SecureDB")
+    .openHelperFactory(factory)
+    .build()
+```
+
+### ⚙️ Coroutine & Flow Support
+
+```kotlin
+@Query("SELECT * FROM users")
+fun getAllUsers(): Flow<List<User>>
+```
+
+---
+
+## 🔗 Retrofit with RxJava
+
+### 📦 Retrofit + RxJava Integration
+
+```kotlin
+interface ApiService {
+    @GET("users")
+    fun getUsers(): Observable<List<User>>
+}
+
+val retrofit = Retrofit.Builder()
+    .baseUrl("https://api.example.com")
+    .addConverterFactory(GsonConverterFactory.create())
+    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+    .build()
+
+val apiService = retrofit.create(ApiService::class.java)
+```
+
+---
+
+## 📲 Firebase Cloud Messaging (FCM)
+
+### 🛠️ Basic Setup
+
+1. Add `google-services.json`
+2. Add dependencies:
+
+```groovy
+implementation 'com.google.firebase:firebase-messaging:23.4.1'
+```
+
+### 📡 FCM Service
+
+```kotlin
+class MyFirebaseMessagingService : FirebaseMessagingService() {
+    override fun onNewToken(token: String) { ... }
+    override fun onMessageReceived(remoteMessage: RemoteMessage) { ... }
+}
+```
+
+### ✅ Manifest Declaration
+
+```xml
+<service android:name=".MyFirebaseMessagingService" android:exported="false">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+    </intent-filter>
+</service>
+```
+
+---
+
+## 🔗 Deep Linking in Android
+
+### 1. Basic Deep Link
+
+```xml
+<activity android:name=".MainActivity">
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="https" android:host="www.example.com" android:pathPrefix="/content"/>
+    </intent-filter>
+</activity>
+```
+
+### 2. App Links
+
+Set up `assetlinks.json`:
+
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.yourapp",
+      "sha256_cert_fingerprints": ["SHA256_HASH"]
+    }
+  }
+]
+```
+
+### 3. Firebase Dynamic Links
+
+```kotlin
+val dynamicLink = Firebase.dynamicLinks.createDynamicLink()
+    .setLink(Uri.parse("https://yourapp.com/product/123"))
+    .setDomainUriPrefix("https://yourapp.page.link")
+    .setAndroidParameters(DynamicLink.AndroidParameters.Builder().build())
+    .buildDynamicLink()
+```
+
+---
+
+## 🧪 Retrofit `enqueue()` vs `execute()`
+
+| Feature      | `enqueue()` (Async)                 | `execute()` (Sync)             |
+| ------------ | ----------------------------------- | ------------------------------ |
+| Thread       | Background                          | Current (Blocking)             |
+| Main Thread? | ✅ Safe                              | ❌ Not safe                     |
+| Callback     | Yes (onResponse/onFailure)          | No (direct response/exception) |
+| Use Case     | UI interactions, ViewModel API call | WorkManager, background jobs   |
+
+**Best:** Use `suspend` with Coroutines
+
+```kotlin
+@GET("users/{id}")
+suspend fun getUser(@Path("id") id: Int): User
+```
+
+---
+
+## 🛡️ Google Play Console Security
+
+### 1. Play App Signing
+
+* Protects from APK tampering.
+* Automatically signs builds uploaded to Play.
+
+### 2. Play Integrity API
+
+```kotlin
+val request = IntegrityTokenRequest.builder()
+    .setNonce(UUID.randomUUID().toString())
+    .build()
+
+integrityManager.requestIntegrityToken(request)
+    .addOnSuccessListener { response ->
+        val token = response.token()
+        // Send to server for verification
+    }
+```
+
+### 3. SQLCipher Integration
+
+```kotlin
+val passphrase = SQLiteDatabase.getBytes("secure".toCharArray())
+val factory = SupportFactory(passphrase)
+Room.databaseBuilder(context, AppDatabase::class.java, "secure.db")
+    .openHelperFactory(factory)
+    .build()
+```
+
+---
+
+## 📥 Data Passing Techniques
+
+| Method            | Use Case             | Scope            |
+| ----------------- | -------------------- | ---------------- |
+| Intent            | Activity to Activity | Same / cross app |
+| ViewModel         | Fragment to Fragment | Same app         |
+| BroadcastReceiver | App-wide messaging   | Same / cross app |
+| ContentProvider   | Structured data      | Cross app        |
+
+---
+
+## 📺 ExoPlayer Integration
+
+```kotlin
+val player = ExoPlayer.Builder(context).build()
+playerView.player = player
+
+val mediaItem = MediaItem.fromUri("https://example.com/video.m3u8")
+player.setMediaItem(mediaItem)
+player.prepare()
+player.play()
+```
+
+---
+
+## 🧠 Design Patterns in Android
+
+| Pattern | Key Role   | Usage Example       |
+| ------- | ---------- | ------------------- |
+| MVC     | Controller | Legacy Android      |
+| MVP     | Presenter  | Pre-Jetpack         |
+| MVVM    | ViewModel  | Modern Jetpack apps |
+
+---
+
+## 🔚 Summary
+
+This guide offers modular and production-grade examples for:
+
+* Room DB (relationships, migration, conflict handling)
+* Secure Networking (Retrofit, RxJava, Coroutine)
+* Firebase Push Notifications
+* App Signing and Integrity API
+* Deep Linking (manual, verified, Firebase)
+* Secure Data Passing
+* ExoPlayer for media apps
+
+---
